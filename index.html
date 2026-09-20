@@ -181,6 +181,25 @@
   var accumulatedMs = 0;    // total elapsed before current run
   var tickInterval = null;
   var clockInterval = null;
+  var wakeLock = null;
+
+  function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen').then(function (lock) {
+      wakeLock = lock;
+      wakeLock.addEventListener('release', function () { wakeLock = null; });
+    }).catch(function () { /* ignore - e.g. low battery mode blocks it */ });
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && running) {
+      requestWakeLock();
+    }
+  });
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
@@ -213,6 +232,7 @@
     elapsedEl.classList.add('running');
     tickInterval = setInterval(renderElapsed, 1000);
     renderElapsed();
+    requestWakeLock();
   }
 
   function stop() {
@@ -226,6 +246,7 @@
     elapsedEl.classList.remove('running');
     elapsedEl.classList.add('stopped');
     renderElapsed();
+    releaseWakeLock();
   }
 
   function reset() {
@@ -238,6 +259,7 @@
     elapsedEl.classList.remove('running');
     elapsedEl.classList.add('stopped');
     renderElapsed();
+    releaseWakeLock();
   }
 
   startStopBtn.addEventListener('click', function () {
