@@ -78,6 +78,8 @@
     flex-direction: column;
     align-items: center;
     gap: 6px;
+    width: 100%;
+    overflow: hidden;
   }
 
   .elapsed-label {
@@ -88,12 +90,14 @@
   }
 
   .elapsed-time {
-    font-size: clamp(64px, 24vw, 220px);
+    font-size: clamp(56px, 17vw, 150px);
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     text-align: center;
+    white-space: nowrap;
+    max-width: 94vw;
     transition: color 0.2s ease;
   }
 
