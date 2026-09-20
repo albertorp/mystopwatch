@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stopwatch">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Presentation Stopwatch</title>
+<style>
+  :root {
+    --bg: #000000;
+    --bg-2: #000000;
+    --text: #f2f3f5;
+    --text-dim: #9aa0ab;
+    --accent: #4f8cff;
+    --accent-2: #ff5a5a;
+    --btn-bg: #1f2430;
+    --btn-bg-active: #2a3142;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000;
+      --bg-2: #000000;
+      --text: #f2f3f5;
+      --text-dim: #9aa0ab;
+      --btn-bg: #1f2430;
+      --btn-bg-active: #2a3142;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --bg-2: #000000;
+    --text: #f2f3f5;
+    --text-dim: #9aa0ab;
+    --btn-bg: #1f2430;
+    --btn-bg-active: #2a3142;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) 16px;
+    gap: 4vh;
+  }
+
+  .current-time {
+    font-size: clamp(20px, 6vw, 34px);
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .elapsed-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .elapsed-label {
+    font-size: clamp(11px, 2.5vw, 14px);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  .elapsed-time {
+    font-size: clamp(64px, 24vw, 220px);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    text-align: center;
+    transition: color 0.2s ease;
+  }
+
+  .elapsed-time.running { color: var(--accent); }
+  .elapsed-time.stopped { color: var(--text); }
+
+  .controls {
+    display: flex;
+    gap: 4vw;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  button {
+    flex: 1 1 0;
+    min-width: 110px;
+    max-width: 220px;
+    padding: clamp(14px, 3.5vh, 22px) 12px;
+    font-size: clamp(16px, 3vw, 22px);
+    font-weight: 600;
+    border: none;
+    border-radius: 16px;
+    background: var(--btn-bg);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  button:active {
+    background: var(--btn-bg-active);
+    transform: scale(0.97);
+  }
+
+  #startStopBtn.start { background: #1e3a2e; color: #4fdc8c; }
+  #startStopBtn.stop { background: #3a1e1e; color: #ff6b6b; }
+
+  #resetBtn { background: var(--btn-bg); color: var(--text-dim); }
+
+  /* Landscape: put current time above, elapsed centered big, controls in a row below - already flex column works, just tighten gaps */
+  @media (orientation: landscape) {
+    body { gap: 2vh; padding-top: calc(8px + env(safe-area-inset-top, 0px)); }
+    .current-time { font-size: clamp(16px, 5vh, 28px); }
+    .elapsed-time { font-size: clamp(56px, 20vh, 180px); }
+    .controls { max-width: 500px; }
+  }
+
+  @media (orientation: landscape) and (max-height: 420px) {
+    .current-time { font-size: clamp(14px, 4vh, 20px); }
+    .elapsed-label { display: none; }
+    .elapsed-time { font-size: clamp(48px, 26vh, 130px); }
+    button { padding: 10px 12px; font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+  <div class="current-time" id="currentTime">--:--:--</div>
+
+  <div class="elapsed-wrap">
+    <div class="elapsed-label">Elapsed</div>
+    <div class="elapsed-time stopped" id="elapsedTime">00:00:00</div>
+  </div>
+
+  <div class="controls">
+    <button id="startStopBtn" class="start">Start</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+<script>
+(function () {
+  var elapsedEl = document.getElementById('elapsedTime');
+  var currentTimeEl = document.getElementById('currentTime');
+  var startStopBtn = document.getElementById('startStopBtn');
+  var resetBtn = document.getElementById('resetBtn');
+
+  var running = false;
+  var startTimestamp = 0;   // when current run started
+  var accumulatedMs = 0;    // total elapsed before current run
+  var tickInterval = null;
+  var clockInterval = null;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function formatElapsed(ms) {
+    var totalSeconds = Math.floor(ms / 1000);
+    var h = Math.floor(totalSeconds / 3600);
+    var m = Math.floor((totalSeconds % 3600) / 60);
+    var s = totalSeconds % 60;
+    return pad(h) + ':' + pad(m) + ':' + pad(s);
+  }
+
+  function renderElapsed() {
+    var ms = accumulatedMs + (running ? (Date.now() - startTimestamp) : 0);
+    elapsedEl.textContent = formatElapsed(ms);
+  }
+
+  function renderClock() {
+    var now = new Date();
+    currentTimeEl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    startTimestamp = Date.now();
+    startStopBtn.textContent = 'Stop';
+    startStopBtn.classList.remove('start');
+    startStopBtn.classList.add('stop');
+    elapsedEl.classList.remove('stopped');
+    elapsedEl.classList.add('running');
+    tickInterval = setInterval(renderElapsed, 1000);
+    renderElapsed();
+  }
+
+  function stop() {
+    if (!running) return;
+    running = false;
+    accumulatedMs += Date.now() - startTimestamp;
+    clearInterval(tickInterval);
+    startStopBtn.textContent = 'Start';
+    startStopBtn.classList.remove('stop');
+    startStopBtn.classList.add('start');
+    elapsedEl.classList.remove('running');
+    elapsedEl.classList.add('stopped');
+    renderElapsed();
+  }
+
+  function reset() {
+    running = false;
+    accumulatedMs = 0;
+    clearInterval(tickInterval);
+    startStopBtn.textContent = 'Start';
+    startStopBtn.classList.remove('stop');
+    startStopBtn.classList.add('start');
+    elapsedEl.classList.remove('running');
+    elapsedEl.classList.add('stopped');
+    renderElapsed();
+  }
+
+  startStopBtn.addEventListener('click', function () {
+    if (running) { stop(); } else { start(); }
+  });
+
+  resetBtn.addEventListener('click', reset);
+
+  renderClock();
+  clockInterval = setInterval(renderClock, 1000);
+  renderElapsed();
+})();
+</script>
+</body>
+</html>
