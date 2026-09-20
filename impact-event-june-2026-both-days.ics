@@ -1,0 +1,32 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ical.marudot.com//iCal Event Maker
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Asia/Dubai
+LAST-MODIFIED:20250410T142247Z
+TZURL:https://www.tzurl.org/zoneinfo-outlook/Asia/Dubai
+X-LIC-LOCATION:Asia/Dubai
+BEGIN:STANDARD
+TZNAME:+04
+TZOFFSETFROM:+0400
+TZOFFSETTO:+0400
+DTSTART:19700101T000000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20260508T100743Z
+UID:1742812598816-96004@ical.marudot.com
+DTSTART;TZID=Asia/Dubai:20260609T100000
+DTEND;TZID=Asia/Dubai:20260610T170000
+SUMMARY:Hub71's Impact Event 2026
+URL:https://maps.app.goo.gl/yqysUo7VGrdmhkqP9
+DESCRIPTION:Join us for two impactful days\, where leading startups\, investors\, and strategic partners convene to explore innovative ideas\, engage in thought - provoking discussions\, and showcase Abu Dhabi’s potential as a leading tech and investment powerhouse.
+LOCATION:Manarat Al Saadiyat\, Abu Dhabi
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Hub71's Impact Event 2026
+TRIGGER:-PT15M
+END:VALARM
+END:VEVENT
+END:VCALENDAR
